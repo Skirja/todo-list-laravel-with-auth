@@ -54,7 +54,7 @@
                                 @method('DELETE')
                                 <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">Delete</button>
                             </form>
-                            <button type="button" data-id="{{ $todo->id }}" data-task="{{ $todo->task }}" data-due-date="{{ $todo->due_date }}" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded ml-2 edit-button">Edit</button>
+                            <button type="button" data-id="{{ $todo->id }}" data-task="{{ $todo->task }}" data-due-date="{{ $todo->due_date }}" data-completed="{{ $todo->completed }}" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded ml-2 edit-button">Edit</button>
                         </div>
                     </li>
                 @endforeach
@@ -116,26 +116,41 @@
                 const todoId = button.dataset.id;
                 const todoTask = button.dataset.task;
                 const todoDueDate = button.dataset.dueDate;
+                const todoCompleted = button.dataset.completed;
 
                 document.getElementById('edit-id').value = todoId;
                 document.getElementById('edit-task').value = todoTask;
                 document.getElementById('edit-due-date').value = todoDueDate;
+                document.getElementById('edit-completed').checked = todoCompleted === '1';
                 editModal.classList.remove('hidden');
             });
         });
 
         editForm.addEventListener('submit', (event) => {
             event.preventDefault();
-            const formData = new FormData(editForm);
+
+            const todoId = document.getElementById('edit-id').value;
+            const task = document.getElementById('edit-task').value;
+            const dueDate = document.getElementById('edit-due-date').value;
+            const completed = document.getElementById('edit-completed').checked;
+
+
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-            formData.append('_token', csrfToken);
-            const url = `/todos/${document.getElementById('edit-id').value}`;
+            const url = `/todos/${todoId}`;
+
             fetch(url, {
                 method: 'PUT',
                 headers: {
+                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken
                 },
-                body: formData
+                body: JSON.stringify({
+                    task: task,
+                    due_date: dueDate,
+                    completed: completed,
+                    _token: csrfToken,
+                    _method: 'PUT'
+                })
             })
             .then(response => {
                 if (!response.ok) {
